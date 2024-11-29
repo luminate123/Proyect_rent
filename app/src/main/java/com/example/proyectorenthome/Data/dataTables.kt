@@ -59,7 +59,7 @@ data class Reserva(
 
 @Serializable
 data class Conversaciones(
-    val id: Int,
+    val id: Int? = null,
     val usuario1_id: Int,
     val usuario2_id: Int
 )

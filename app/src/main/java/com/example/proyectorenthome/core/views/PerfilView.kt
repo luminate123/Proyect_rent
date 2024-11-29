@@ -87,6 +87,7 @@ import com.example.proyectorenthome.core.navigation.Perfil
 import com.example.proyectorenthome.supabase
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -100,7 +101,8 @@ fun PerfilView(
     usuarioId: String,
     navigateToHome: () -> Unit,
     navigateToRegisterProperty: () -> Unit,
-    navigateToChats: () -> Unit
+    navigateToChats: () -> Unit,
+    navigateToLogin: () -> Unit
 ) {
     Scaffold(
         modifier = Modifier
@@ -126,7 +128,8 @@ fun PerfilView(
                 },
                 actions = {
                     IconButton(onClick = {
-
+                        closeSession()
+                        navigateToLogin()
                     }) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -695,6 +698,16 @@ suspend fun eliminarProperty(propertyId: Int){
         Log.d("se elimino correctamente","Propiedad eliminado")
     }catch (e: Exception){
         Log.d("Error","Propiedad no eliminado:${e.message}")
+    }
+}
+
+fun closeSession(){
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            supabase.auth.signOut()
+        }catch (e:Exception){
+            Log.d("error","Error al cerrar sesion")
+        }
     }
 }
 

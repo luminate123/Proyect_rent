@@ -89,7 +89,6 @@ fun RegisterView(navigateToLogin: () -> Unit) {
                     try {
                         supabase.from("users").insert(
                             mapOf(
-
                                 "nombre" to nombre,
                                 "email" to email,
                                 "contraseña" to contraseña,

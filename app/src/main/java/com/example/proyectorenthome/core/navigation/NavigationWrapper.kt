@@ -61,6 +61,9 @@ fun NavigationWrapper() {
                 navigateToRegisterProperty = { navController.navigate(RegisterProperty) },
                 navigateToChats = {
                     navController.navigate(Chats)
+                },
+                navigateToLogin = {
+                    navController.navigate(Login)
                 }
             )
         }

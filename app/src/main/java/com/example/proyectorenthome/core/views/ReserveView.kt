@@ -61,10 +61,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import com.example.proyectorenthome.Data.Conversaciones
 import com.example.proyectorenthome.Data.ImagenPropiedad
 import com.example.proyectorenthome.Data.Properties
 import com.example.proyectorenthome.Data.PropertyWithImage
 import com.example.proyectorenthome.Data.Reserva
+import com.example.proyectorenthome.Data.User
 import com.example.proyectorenthome.core.navigation.Reserve
 import com.example.proyectorenthome.supabase
 import io.github.jan.supabase.auth.auth
@@ -329,6 +331,7 @@ fun ReserveView(propertyId: Int, navigateToHome: () -> Unit) {
             // Botón de reserva con diseño moderno
             Button(
                 onClick = {
+                    createChat(userId,propertyId)
                     handleReservation(
                         propertyId = propertyId,
                         userId = userId,
@@ -562,4 +565,46 @@ fun handleReservation(
             println("Error al registrar la reserva: ${e.message}")
         }
     }
+}
+
+fun createChat(
+    user1ID: String, user2ID: Int
+){
+    CoroutineScope(Dispatchers.IO).launch {
+        try{
+            val response = supabase.from("users").select {
+                filter {
+                    eq("UUID", user1ID)
+                }
+            }.decodeSingle<User>()
+
+            val response2 = supabase.from("properties").select {
+                filter {
+                    eq("id",user2ID)
+                }
+            }.decodeSingle<Properties>()
+
+            val response3 = supabase.from("users").select {
+                filter {
+                    eq("UUID",response2.usuario_id)
+                }
+            }.decodeSingle<User>()
+
+            val conversacion = Conversaciones(
+                usuario1_id = response.id,
+                usuario2_id = response3.id
+            )
+            supabase.from("conversaciones").insert(conversacion){
+                select()
+                single()
+            }
+
+            supabase.from("reservas").select()
+
+        }catch (e:Exception){
+            Log.d("error","error al cargar")
+        }
+
+    }
+
 }

@@ -355,7 +355,8 @@ suspend fun loadMessageClientReserve(userId: Int,onMessageLoaded: (List<ChatDeta
         // Paso 3: Cargar mensajes asociados a la conversación
         val loadMessages = supabase.from("mensajes").select {
             filter {
-                eq("conversacion_id", chatLoaded.id)
+                eq("conversacion_id", chatLoaded?.id ?: -1)
+
             }
             order(column = "fecha_envio",Order.DESCENDING)
         }.decodeList<ChatDetail>()
@@ -399,7 +400,8 @@ suspend fun loadMessageClientClients(userId: Int,onMessageLoaded: (List<ChatDeta
         // Paso 3: Cargar mensajes asociados a la conversación
         val loadMessages = supabase.from("mensajes").select {
             filter {
-                eq("conversacion_id", chatLoaded.id)
+                eq("conversacion_id", chatLoaded?.id ?: -1)
+
             }
             order(column = "fecha_envio",Order.DESCENDING)
         }.decodeList<ChatDetail>()
