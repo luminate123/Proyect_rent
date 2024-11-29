@@ -19,3 +19,9 @@ data class Reserve(val propertyId : Int)
 
 @Serializable
 data class Perfil(val usuarioId : String)
+
+@Serializable
+object Chats
+
+@Serializable
+data class Messages(val chatId: Int)

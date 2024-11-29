@@ -1,18 +1,29 @@
 package com.example.proyectorenthome.core.views
 
+import android.graphics.fonts.FontStyle
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
@@ -21,8 +32,11 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -34,9 +48,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
@@ -46,7 +67,7 @@ import com.example.proyectorenthome.Data.PropertyWithImage
 import com.example.proyectorenthome.Data.Reserva
 import com.example.proyectorenthome.core.navigation.Reserve
 import com.example.proyectorenthome.supabase
-import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,7 +77,7 @@ import java.math.BigDecimal
 import kotlin.math.sin
 
 @Composable
-fun ReserveView(propertyId: Int) {
+fun ReserveView(propertyId: Int, navigateToHome: () -> Unit) {
     var property by remember { mutableStateOf<Properties?>(null) }
     var imagenProperty by remember { mutableStateOf<ImagenPropiedad?>(null) }
     var userId by remember { mutableStateOf("") }
@@ -67,10 +88,11 @@ fun ReserveView(propertyId: Int) {
     var showDatePicker by remember { mutableStateOf(false) }
     var maxGuest by remember { mutableStateOf(1) }
     val session = supabase.auth.currentSessionOrNull()
+
     LaunchedEffect(propertyId) {
-        val loadedProperty = loadProperty(propertyId) // Llamar a la función suspendida
+        val loadedProperty = loadProperty(propertyId)
         if (loadedProperty != null) {
-            val propertyData = loadedProperty.property // Acceder a la propiedad
+            val propertyData = loadedProperty.property
             val imagenpropertyData = loadedProperty.image
             property = propertyData
             imagenProperty = imagenpropertyData
@@ -82,7 +104,6 @@ fun ReserveView(propertyId: Int) {
         }
     }
 
-
     fun calculateTotalCost() {
         val pricePerNight = property?.precio_noche?.toBigDecimal() ?: BigDecimal.ZERO
         val days = calculateDaysBetween(startDate, endDate)
@@ -93,120 +114,260 @@ fun ReserveView(propertyId: Int) {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
-        // Imagen principal de la propiedad
-        imagenProperty?.url_imagen?.let { imageUrl ->
-            // Carga de imagen (puedes usar Glide o Coil)
-            Image(
-                painter = rememberAsyncImagePainter(imageUrl),
-                contentDescription = "Imagen de la propiedad",
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.linearGradient(
+                colors = listOf(
+                    Color(0xFFF0F4F8),
+                    Color(0xFFFFFFFF)
+                )
+            )),
+        color = Color.Transparent
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Imagen principal de la propiedad con efecto elegante
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
-                contentScale = ContentScale.Crop
-            )
-        }
-
-        // Información de la propiedad
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = property?.ciudad ?: "Ubicación desconocida",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "A ${property?.dirección}",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "S/ ${property?.precio_noche} noche",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Selección de rango de fechas
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = MaterialTheme.shapes.medium
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Button(
-                    onClick = { showDatePicker = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Blue
+                    .height(250.dp)
+            ) {
+                imagenProperty?.url_imagen?.let { imageUrl ->
+                    Image(
+                        painter = rememberAsyncImagePainter(imageUrl),
+                        contentDescription = "Imagen de la propiedad",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                alpha = 0.9f
+                                scaleX = 1.05f
+                                scaleY = 1.05f
+                            }
+                            .blur(10.dp),
+                        contentScale = ContentScale.Crop
                     )
-                ) {
-                    Text("Seleccionar rango de fechas")
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                // Imagen principal superpuesta
+                imagenProperty?.url_imagen?.let { imageUrl ->
+                    Image(
+                        painter = rememberAsyncImagePainter(imageUrl),
+                        contentDescription = "Imagen de la propiedad",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(250.dp)
+                            .clip(RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp))
+                            .shadow(
+                                elevation = 20.dp,
+                                shape = RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp)
+                            )
+                            .border(
+                                width = 3.dp,
+                                color = Color.White,
+                                shape = RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp)
+                            ),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
 
-                Text("Fecha Inicio: $startDate", style = MaterialTheme.typography.bodyMedium)
-                Text("Fecha Fin: $endDate", style = MaterialTheme.typography.bodyMedium)
+            // Información de la propiedad con diseño refinado
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .background(Color.Transparent)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { navigateToHome()}) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Localized description"
+                        )
+                    }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Selector de número de huéspedes
-                SelectListOption(
-                    maxGuest = maxGuest,
-                    numGuests = numGuests,
-                    onNumGuestsChange = { numGuests = it }
+                    Text(
+                        text = property?.ciudad ?: "Ubicación",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1A365D)
+                        )
+                    )
+                }
+                Text(
+                    text = property?.ciudad ?: "Ubicación",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1A365D)
+                    )
                 )
-
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "A ${property?.dirección}",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = Color(0xFF4A5568)
+                    )
+                )
                 Spacer(modifier = Modifier.height(8.dp))
-
-                // Mostrar total de pago
-                OutlinedTextField(
-                    value = totalPayment,
-                    onValueChange = {},
-                    label = { Text("Total de pago (S/)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = false
+                Text(
+                    text = "S/ ${property?.precio_noche} por noche",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        color = Color(0xFF2C5282),
+                        fontWeight = FontWeight.SemiBold
+                    )
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Botón Confirmar Reserva
-        Button(
-            onClick = {
-                handleReservation(
-                    propertyId = propertyId,
-                    userId = userId,
-                    startDate = startDate,
-                    endDate = endDate,
-                    numGuests = numGuests.toIntOrNull() ?: 0,
-                    totalPayment = totalPayment.toFloatOrNull() ?: 0f,
-                    reservationState = "pendiente"
+            // Tarjeta de reserva con diseño elevado
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .shadow(
+                        elevation = 10.dp,
+                        shape = RoundedCornerShape(20.dp)
+                    ),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFF7FAFC)
                 )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-        ) {
-            Text("Confirmar Reserva")
-        }
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .fillMaxWidth()
+                ) {
+                    // Selector de fechas con diseño moderno
+                    Button(
+                        onClick = { showDatePicker = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF3182CE)
+                        ),
+                        shape = RoundedCornerShape(15.dp)
+                    ) {
+                        Text(
+                            "Seleccionar fechas",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.Medium
+                            )
+                        )
+                    }
 
-        // Modal de selección de fechas
-        if (showDatePicker) {
-            DateRangePickerModal(
-                onDateRangeSelected = { dateRange ->
-                    startDate = formatDate(dateRange.first ?: 0)
-                    endDate = formatDate(dateRange.second ?: 0)
-                    calculateTotalCost()
-                    showDatePicker = false
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Información de fechas
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Check-in: $startDate",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = Color(0xFF4A5568)
+                            )
+                        )
+                        Text(
+                            "Check-out: $endDate",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = Color(0xFF4A5568)
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Selector de huéspedes con diseño refinado
+                    SelectListOption(
+                        maxGuest = maxGuest,
+                        numGuests = numGuests,
+                        onNumGuestsChange = { numGuests = it }
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Total de pago con efecto de destacado
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Color(0xFFEBF8FF),
+                        shape = RoundedCornerShape(15.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                "Total de pago",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    color = Color(0xFF2C5282)
+                                )
+                            )
+                            Text(
+                                "S/ $totalPayment",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF2C5282)
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Botón de reserva con diseño moderno
+            Button(
+                onClick = {
+                    handleReservation(
+                        propertyId = propertyId,
+                        userId = userId,
+                        startDate = startDate,
+                        endDate = endDate,
+                        numGuests = numGuests.toIntOrNull() ?: 0,
+                        totalPayment = totalPayment.toFloatOrNull() ?: 0f,
+                        reservationState = "pendiente"
+                    )
                 },
-                onDismiss = { showDatePicker = false }
-            )
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .height(55.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2C5282)
+                ),
+                shape = RoundedCornerShape(15.dp)
+            ) {
+                Text(
+                    "Confirmar Reserva",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+
+            // Modal de selección de fechas
+            if (showDatePicker) {
+                DateRangePickerModal(
+                    onDateRangeSelected = { dateRange ->
+                        startDate = formatDate(dateRange.first ?: 0)
+                        endDate = formatDate(dateRange.second ?: 0)
+                        calculateTotalCost()
+                        showDatePicker = false
+                    },
+                    onDismiss = { showDatePicker = false }
+                )
+            }
         }
     }
 }

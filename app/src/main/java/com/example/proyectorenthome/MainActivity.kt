@@ -21,10 +21,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.proyectorenthome.core.navigation.NavigationWrapper
 import com.example.proyectorenthome.ui.theme.ProyectorentHomeTheme
 import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.gotrue.Auth
-
+import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -38,6 +38,7 @@ val supabase = createSupabaseClient(
     install(Auth)
     install(Postgrest)
     install(Storage)
+    install(Realtime)
     //install other modules
 }
 

@@ -82,5 +82,4 @@ dependencies {
     implementation(libs.ktor.client.android)
     implementation(libs.kotlinx.serialization.json)
     implementation("io.github.jan-tennert.supabase:storage-kt:2.5.0")
-
 }

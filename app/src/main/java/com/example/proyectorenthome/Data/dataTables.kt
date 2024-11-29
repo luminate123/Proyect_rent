@@ -1,6 +1,8 @@
 package com.example.proyectorenthome.Data
 
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
+import java.sql.Timestamp
 
 @Serializable
 data class UserLogin(
@@ -53,4 +55,29 @@ data class Reserva(
     val num_huespedes: Int,
     val total_pago: Float,
     val estado: String
+)
+
+@Serializable
+data class Conversaciones(
+    val id: Int,
+    val usuario1_id: Int,
+    val usuario2_id: Int
+)
+
+@Serializable
+data class ChatDetail(
+    val id: Int,
+    val conversacion_id: Int,
+    val remitente_id: Int,
+    val contenido: String,
+    val url: String? = null, // Valor predeterminado
+    val fecha_envio : Instant
+)
+
+@Serializable
+data class MensajeInsert(
+    val conversacion_id: Int,
+    val remitente_id: Int,
+    val contenido: String,
+    val url_imagen: String? = null
 )
