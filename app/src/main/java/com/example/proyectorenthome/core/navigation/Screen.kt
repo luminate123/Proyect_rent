@@ -19,3 +19,4 @@ data class Reserve(val propertyId : Int)
 
 @Serializable
 data class Perfil(val usuarioId : String)
+
